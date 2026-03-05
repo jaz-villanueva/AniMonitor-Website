@@ -1,0 +1,300 @@
+/* ═══════════════════════════════════════════════════
+   AniMonitor — heat-uv.css
+   Warm amber gradient bg + glassmorphism cards
+   Inherits Montserrat font via Google Fonts in HTML
+═══════════════════════════════════════════════════ */
+
+:root {
+    --glass-border:  rgba(255, 255, 255, 0.18);
+    --card-radius:   18px;
+    --amber-dark:    rgba(180, 100, 0, 0.18);
+    --text-primary:  #ffffff;
+}
+
+/* ───────────────────────────────────────
+   BASE
+─────────────────────────────────────── */
+html, body {
+    min-height: 100vh;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* ───────────────────────────────────────
+   BACKGROUND — warm amber radial gradient
+   matching the design image
+─────────────────────────────────────── */
+body {
+    /* Layered radial gradients to reproduce the warm golden glow */
+    background:
+        radial-gradient(ellipse at 0% 100%, rgba(253, 160, 0, 0.9) 0%, transparent 60%),
+        radial-gradient(ellipse at 10% 80%, rgba(235, 171, 43, 0.6) 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 60%, rgba(253, 232, 183, 0.6) 0%, transparent 50%),
+        /*linear-gradient(160deg, #c8850a81 0%, #e8a830 35%, #ddab46e3 65%, #d4a040 100%); */
+        linear-gradient(45deg, #c8850a81 70%);
+        
+    background-attachment: fixed;
+}
+
+/* ───────────────────────────────────────
+   GLASSMORPHISM HELPER
+   (matching weather-forecast.css .glass)
+─────────────────────────────────────── */
+.glass {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(14px) saturate(1.4) brightness(1.05);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4) brightness(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--card-radius);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* ───────────────────────────────────────
+   PAGE WRAPPER + GRID
+─────────────────────────────────────── */
+.page-wrapper {
+    padding: 1.5rem 2rem 2.5rem;
+    max-width: 960px;
+    margin: 62px auto 0;   /* 62px = navbar height */
+}
+
+/* CSS Grid: 2-col layout — left wider, right narrower */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 1.1rem;
+    align-items: start;
+}
+
+/* ───────────────────────────────────────
+   LEFT COLUMN
+─────────────────────────────────────── */
+.left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* ── Caution card ── */
+.caution-card {
+    padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.caution-headline {
+    font-size: clamp(1.65rem, 3.5vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: #fff;
+    margin-bottom: 0.9rem;
+    letter-spacing: -0.02em;
+    /* Dynamic text via JS — also overridden per UV/HI level */
+}
+
+.caution-date,
+.caution-feels {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    margin: 0;
+    line-height: 1.7;
+}
+
+/* ── Safety Reminders card ── */
+.reminders-card {
+    padding: 1.25rem 1.5rem 1.25rem;
+}
+
+.reminders-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 0.85rem;
+    text-transform: none;
+}
+
+/* Each reminder row */
+.reminder-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    transition: background 0.2s, transform 0.2s;
+}
+.reminder-row:last-child { margin-bottom: 0; }
+.reminder-row:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateY(-2px);
+}
+
+.reminder-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.reminder-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+}
+.reminder-desc {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+}
+.reminder-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.15));
+}
+
+/* ───────────────────────────────────────
+   RIGHT COLUMN
+─────────────────────────────────────── */
+.right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* Shared data card base */
+.data-card {
+    padding: 1.4rem 1.5rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative blob inside each card (matches design image) */
+.data-card::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    right: -15%;
+    width: 160px;
+    height: 100px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(18px);
+    opacity: 0.35;
+}
+.uv-card::after { background: rgba(255, 200, 60, 0.7); }
+.hi-card::after  { background: rgba(255, 140, 40, 0.6); }
+
+/* All children above the pseudo blob */
+.data-card > * { position: relative; z-index: 1; }
+
+/* Card header row: icon + label */
+.data-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.85rem;
+}
+.data-card-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    /* slight warm tint filter to match design */
+    filter: drop-shadow(0 1px 4px rgba(200,120,0,0.4));
+}
+.data-card-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 0.01em;
+}
+
+/* Big value row: number + unit + arrow */
+.data-card-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-bottom: 0.6rem;
+}
+.data-card-value {
+    font-size: clamp(2.4rem, 6vw, 3.2rem);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    transition: opacity 0.4s ease;
+}
+.data-card-unit {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+.data-card-arrow {
+    font-size: 1.2rem;
+    font-weight: 700;
+    /* colour set by JS per risk level */
+    color: #f87171;
+    margin-left: 2px;
+    transition: color 0.4s ease;
+}
+
+/* Level badge pill */
+.data-card-level {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 50px;
+    padding: 4px 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.04em;
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+/* ───────────────────────────────────────
+   LEVEL COLOUR OVERRIDES
+   Applied via JS data-level attribute
+─────────────────────────────────────── */
+
+/* UV */
+[data-uv-level="Low"]       .data-card-level { background: rgba(74,222,128,0.25); border-color: rgba(74,222,128,0.4); }
+[data-uv-level="Moderate"]  .data-card-level { background: rgba(250,204,21,0.25); border-color: rgba(250,204,21,0.4); }
+[data-uv-level="High"]      .data-card-level { background: rgba(251,146,60,0.28); border-color: rgba(251,146,60,0.45); }
+[data-uv-level="Very High"] .data-card-level { background: rgba(248,113,113,0.28); border-color: rgba(248,113,113,0.45); }
+[data-uv-level="Extreme"]   .data-card-level { background: rgba(167,139,250,0.28); border-color: rgba(167,139,250,0.45); }
+
+/* Heat Index */
+[data-hi-level="Normal"]        .data-card-level { background: rgba(74,222,128,0.25); border-color: rgba(74,222,128,0.4); }
+[data-hi-level="Caution"]       .data-card-level { background: rgba(250,204,21,0.25); border-color: rgba(250,204,21,0.4); }
+[data-hi-level="Ext. Caution"]  .data-card-level { background: rgba(251,146,60,0.28); border-color: rgba(251,146,60,0.45); }
+[data-hi-level="Danger"]        .data-card-level { background: rgba(248,113,113,0.28); border-color: rgba(248,113,113,0.45); }
+[data-hi-level="Ext. Danger"]   .data-card-level { background: rgba(167,139,250,0.28); border-color: rgba(167,139,250,0.45); }
+
+/* ───────────────────────────────────────
+   RESPONSIVE
+─────────────────────────────────────── */
+@media (max-width: 768px) {
+    .page-wrapper { padding: 1rem 1rem 2rem; }
+
+    /* Stack columns on mobile */
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .right-col {
+        flex-direction: row;  /* UV + HI side by side on tablet */
+    }
+    .data-card { flex: 1 1 0; }
+}
+
+@media (max-width: 520px) {
+    .right-col { flex-direction: column; }
+
+    .caution-headline { font-size: 1.5rem; }
+
+    .data-card-value { font-size: 2.2rem; }
+}

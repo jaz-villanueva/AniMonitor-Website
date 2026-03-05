@@ -10,6 +10,7 @@ const DEFAULT_CITY = 'Manila';
 
 let tempChart;
 
+//this function is used when page is first loaded (laods default city = manila)
 async function loadDefault(){
     try {
         const { lat, lon } = await getGeoData(DEFAULT_CITY);
@@ -20,10 +21,11 @@ async function loadDefault(){
     }
 }
 
+//thus fyunction is used when search button is clicked
 searchButton.addEventListener("click", async(event) => {
     event.preventDefault();
 
-    try {
+    try { //in the try block, textbox is trimmed 
         const city = cityInput.value.trim();
 
         if (!city) {
@@ -31,7 +33,10 @@ searchButton.addEventListener("click", async(event) => {
             return;
         }
 
+        // geodata returns latitude and longitude to get precise weather data
         const { lat, lon } = await getGeoData(city);
+
+        // using longitiude and latitude as input, getWeatherData retyurns .json file containing weather data of the city
         const weatherData = await getWeatherData(lat, lon);
         
         displayWeatherData(weatherData);
@@ -40,6 +45,7 @@ searchButton.addEventListener("click", async(event) => {
     }
 })
 
+//if enter key is pressed then saerch 
 cityInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") searchButton.click();
 });
@@ -51,7 +57,7 @@ async function getGeoData(city){
         throw new Error("Failed to fetch geo Data try again");//TODO: PUT ALERT IN EVERY ERROR
     }
 
-    const geoData = await geoResponse.json(); //get json format of geo data
+    const geoData = await geoResponse.json(); //get json format of geo data (longitude and latitude)
 
     if(geoData.length === 0){
         throw new Error("city not found"); //if json returned is empty, city was not found
@@ -113,12 +119,21 @@ function displayWeatherData(weatherData){
 
     //update 5day forecast
     update5DayForecast(weatherData);
+
+    //update background image
+    if(descriptionToday ===  'Mist' || descriptionToday ===  'Fog' || descriptionToday ===  'Haze'){
+        document.body.style.background = "url('background-images/Fog.jpg') no-repeat center center";
+        document.body.style.backgroundSize = 'cover';
+    }else{
+        document.body.style.background = `url('background-images/${descriptionToday}.jpg') no-repeat center center`;
+        document.body.style.backgroundSize = 'cover';
+    }
     
 }
 
-function getWeatherEmoji(string){
+function getWeatherEmoji(string){ //using the descriptionToday variable, this gets the corresponding emoji
     const weatherIconMap = {
-            'Thunderstorm': '⛈️',
+            'Thunderstorm': '⛈️ ', 
             'Drizzle':      '🌦️',
             'Rain':         '🌧️',
             'Snow':         '❄️',
@@ -272,8 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 //================================================
-
-displayWeatherData()
 
 function update5DayForecast(weatherData) {
     const cards = document.querySelectorAll(".day-card");

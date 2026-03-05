@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniMonitor — Heat & UV</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Shared navbar styles -->
+    <link rel="stylesheet" href="css/navbar.css">
+    <!-- Page styles -->
+    <link rel="stylesheet" href="css/uv-heat.css">
+
+    <!-- Firebase SDK (compat version for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid px-3">
+            <a href="#" class="navbar-logo ms-4">AniMonitor</a>
+
+            <button class="navbar-toggler ms-auto" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarMenu"
+                    aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMenu">
+                <ul class="navbar-menu mx-auto mt-2 mt-lg-0">
+                    <li><a href="">dashboard</a></li>
+                    <li><a href="weather-forecast.html">forecast</a></li>
+                    <li><a href="" class="active">heat uv</a></li>
+                    <li><a href="">map</a></li>
+                    <li><a href="">analysis</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ PAGE CONTENT ═══ -->
+    <div class="page-wrapper">
+        <div class="main-grid">
+
+            <!-- ══════════════════════
+                 LEFT COLUMN
+            ══════════════════════ -->
+            <div class="left-col">
+
+                <!-- Caution / status card -->
+                <div class="glass caution-card">
+                    <h1 class="caution-headline" id="cautionHeadline">Please Exercise<br>Caution Today.</h1>
+                    <p class="caution-date"   id="cautionDate">Loading…</p>
+                    <p class="caution-feels"  id="cautionFeels">feels like --°C</p>
+                </div>
+
+                <!-- Safety Reminders card -->
+                <div class="glass reminders-card">
+                    <p class="reminders-title">Safety Reminders</p>
+
+                    <div class="reminder-row" id="reminderHydrate">
+                        <div class="reminder-text">
+                            <span class="reminder-name">Hydrate</span>
+                            <span class="reminder-desc">Drink 6–8 glasses of water</span>
+                        </div>
+                        <span class="reminder-icon">🥛</span>
+                    </div>
+
+                    <div class="reminder-row" id="reminderSPF">
+                        <div class="reminder-text">
+                            <span class="reminder-name">Use SPF 50+ broad spectrum</span>
+                            <span class="reminder-desc">Reapply every 2–3 hours outdoors</span>
+                        </div>
+                        <span class="reminder-icon">🧴</span>
+                    </div>
+
+                    <div class="reminder-row" id="reminderSun">
+                        <div class="reminder-text">
+                            <span class="reminder-name">Limit Peak Sun Exposure</span>
+                            <span class="reminder-desc">Avoid direct sun from 10am–3pm</span>
+                        </div>
+                        <span class="reminder-icon">🕶️</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════
+                 RIGHT COLUMN
+            ══════════════════════ -->
+            <div class="right-col">
+
+                <!-- UV Index card -->
+                <div class="glass data-card uv-card">
+                    <div class="data-card-header">
+                        <span class="data-card-icon">☀️</span>
+                        <span class="data-card-label">UV Index</span>
+                    </div>
+                    <div class="data-card-value-row">
+                        <span class="data-card-value" id="uvValue">--</span>
+                        <span class="data-card-unit">UV</span>
+                        <span class="data-card-arrow" id="uvArrow">↑</span>
+                    </div>
+                    <span class="data-card-level" id="uvLevel">--</span>
+                </div>
+
+                <!-- Heat Index card -->
+                <div class="glass data-card hi-card">
+                    <div class="data-card-header">
+                        <span class="data-card-icon">🌡️</span>
+                        <span class="data-card-label">Heat Index</span>
+                    </div>
+                    <div class="data-card-value-row">
+                        <span class="data-card-value" id="hiValue">--</span>
+                        <span class="data-card-unit">°C</span>
+                        <span class="data-card-arrow" id="hiArrow">↑</span>
+                    </div>
+                    <span class="data-card-level" id="hiLevel">--</span>
+                </div>
+
+            </div>
+
+        </div><!-- /main-grid -->
+    </div><!-- /page-wrapper -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Page logic -->
+    <script src="js/heat-uv.js"></script>
+
+</body>
+</html>

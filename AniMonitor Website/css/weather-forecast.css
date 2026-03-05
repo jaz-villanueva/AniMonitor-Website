@@ -29,6 +29,7 @@ html, body{
     background-size: cover;
     background-color: #7c7676; /* Fallback color */
     z-index: -2;
+    transition: background 0.5s ease-in-out;
 }
 
 
