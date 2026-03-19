@@ -1,15 +1,15 @@
 const POINTS = 30;
 const labels = Array.from({length:POINTS},(_,i)=>{const d=new Date(Date.now()-(POINTS-1-i)*2000);return d.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});});
 
-// Initialize with mock data - will be replaced by Firebase if enabled
+// mock data for now
 let uvData = Array.from({length:POINTS},()=>+(7+Math.random()*3).toFixed(2));
 let tempData = Array.from({length:POINTS},()=>+(30+Math.random()*4).toFixed(1));
 let humData = Array.from({length:POINTS},()=>+(72+Math.random()*10).toFixed(0));
 
 let signalQuality = 4;
-let pollRate = 2000; // in milliseconds
+let pollRate = 2000;
 
-// Firebase real-time listener
+// firebase real-time listener
 function initializeFirebaseListener(){
   if(typeof USE_FIREBASE === 'undefined' || !USE_FIREBASE) return;
   
@@ -174,9 +174,8 @@ function loadDefault(){
   setInterval(()=>{
     const now=new Date();
     document.getElementById('clk').textContent=now.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    // Update signal strength (from Firebase if available, otherwise simulated)
     const signalSymbols = ['▂', '▂▄', '▂▄▆', '▂▄▆█'];
-    const strength = USE_FIREBASE ? signalQuality : Math.floor(Math.random() * 4) + 1;
+    const strength = (typeof USE_FIREBASE !== 'undefined' && USE_FIREBASE) ? signalQuality : Math.floor(Math.random() * 4) + 1;
     document.getElementById('signalStrength').textContent = signalSymbols[Math.min(strength - 1, 3)];
   },1000);
 
@@ -213,7 +212,7 @@ function loadDefault(){
     document.getElementById('bar-hum').style.width=v+'%';
     scatterChart.data.datasets[0].data=tempData.map((t,i)=>({x:+t,y:+humData[i]}));
     scatterChart.update('none');
-    // Update alerts based on current conditions
+    
     updateAlerts(+uvData[uvData.length-1], +tempData[tempData.length-1], +humData[humData.length-1]);
   },2000);
 
