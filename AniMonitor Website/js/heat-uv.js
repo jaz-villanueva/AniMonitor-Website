@@ -5,44 +5,43 @@
      data.uv          → UV index (numeric, e.g. 8.4)
      data.temperature → Ambient temp in °C  (e.g. 33.2)
      data.humidity    → Relative humidity % (e.g. 78)
-     data.signal      → Signal quality 1–4  (optional)
    ═══════════════════════════════════════════════════════════════ */
 
+
+// ─── FLAGS ──────────────────────────────────────────────────────
+// Set USE_FIREBASE to true when your ESP32 is pushing live data.
+// Set to false to use generated mock data during development.
+const USE_FIREBASE = TRUE;
+
+
 // ─── FIREBASE CONFIG ────────────────────────────────────────────
-// ⚠️  Replace these values with your actual Firebase project config
-//     (copy from dashboard.js / Firebase console → Project Settings)
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyD4w7Pwr76wPC0QGtPkF5bDdS1Am9ZJaSw",
-    authDomain: "animonitordb.firebaseapp.com",
-    databaseURL: "https://animonitordb-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "animonitordb",
-    storageBucket: "animonitordb.firebasestorage.app",
-    messagingSenderId: "383571268113",
-    appId: "1:383571268113:web:6fea2d970da19ed10557b0",
-    measurementId: "G-L4BMFXWWSF"
-  };
-// ⚠️  Set this to the Realtime Database path where the ESP32 writes
-//     e.g. "sensorData", "sensors/latest", "weather/current"
+const firebaseConfig = {
+  apiKey:            "AIzaSyD4w7Pwr76wPC0QGtPkF5bDdS1Am9ZJaSw",
+  authDomain:        "animonitordb.firebaseapp.com",
+  databaseURL:       "https://animonitordb-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "animonitordb",
+  storageBucket:     "animonitordb.firebasestorage.app",
+  messagingSenderId: "383571268113",
+  appId:             "1:383571268113:web:6fea2d970da19ed10557b0",
+  measurementId:     "G-L4BMFXWWSF"
+};
+
 const SENSOR_PATH = "sensors/node01";
-// ────────────────────────────────────────────────────────────────
 
 
-// ─── INIT FIREBASE ──────────────────────────────────────────────
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+// ─── INIT FIREBASE (only when enabled) ──────────────────────────
+let sensorRef = null;
+if (USE_FIREBASE) {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  sensorRef = firebase.database().ref(SENSOR_PATH);
 }
-const db        = firebase.database();
-const sensorRef = db.ref(SENSOR_PATH);
 
 
 // ─── STATE ──────────────────────────────────────────────────────
-let latestUV   = null;
-let latestTemp = null;
-let latestHum  = null;
-// Track previous readings to decide arrow direction
-let prevUV  = null;
-let prevHI  = null;
+let prevUV = null;
+let prevHI = null;
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -52,11 +51,8 @@ let prevHI  = null;
 //    Returns: Heat Index °C (rounded to 1 dp)
 // ═══════════════════════════════════════════════════════════════
 function calcHeatIndex(tempC, rh) {
-  // Simple approximation for mild conditions
-  if (tempC < 27 || rh < 40) {
-    return +tempC.toFixed(1);
-  }
-  // Convert to °F for the Rothfusz polynomial
+  if (tempC < 27 || rh < 40) return +tempC.toFixed(1);
+
   const T = tempC * 9 / 5 + 32;
   const R = rh;
 
@@ -80,7 +76,6 @@ function calcHeatIndex(tempC, rh) {
     HI += ((R - 85) / 10) * ((87 - T) / 5);
   }
 
-  // Convert back to °C
   return +((HI - 32) * 5 / 9).toFixed(1);
 }
 
@@ -93,7 +88,7 @@ function classifyUV(uv) {
   if (uv >= 8)  return { level: "Very High",  color: "#ff3b30" };
   if (uv >= 6)  return { level: "High",       color: "#ff9500" };
   if (uv >= 3)  return { level: "Moderate",   color: "#ffd60a" };
-  return         { level: "Low",         color: "#34c759" };
+  return               { level: "Low",        color: "#34c759" };
 }
 
 
@@ -101,26 +96,22 @@ function classifyUV(uv) {
 // 3. HEAT INDEX CLASSIFICATION  (PAGASA categories)
 // ═══════════════════════════════════════════════════════════════
 function classifyHI(hi) {
-  if (hi >= 52) return { level: "Fatal",        color: "#9c27b0" };
-  if (hi >= 42) return { level: "Danger",        color: "#ff3b30" };
-  if (hi >= 33) return { level: "Extreme Caution", color: "#ff9500" };
-  if (hi >= 27) return { level: "Caution",       color: "#ffd60a" };
-  return         { level: "Safe",           color: "#34c759" };
+  if (hi >= 52) return { level: "Fatal",            color: "#9c27b0" };
+  if (hi >= 42) return { level: "Danger",            color: "#ff3b30" };
+  if (hi >= 33) return { level: "Extreme Caution",   color: "#ff9500" };
+  if (hi >= 27) return { level: "Caution",           color: "#ffd60a" };
+  return               { level: "Safe",              color: "#34c759" };
 }
 
 
 // ═══════════════════════════════════════════════════════════════
-// 4. CAUTION HEADLINE  (left column, driven by UV index)
+// 4. CAUTION HEADLINE  (left column, driven by UV + HI)
 // ═══════════════════════════════════════════════════════════════
 function getCautionHeadline(uv, hi) {
-  if (uv >= 11 || hi >= 42)
-    return "Danger!<br>Stay Indoors Today.";
-  if (uv >= 8 || hi >= 33)
-    return "Please Exercise<br>Caution Today.";
-  if (uv >= 6 || hi >= 27)
-    return "Take Care<br>in the Sun Today.";
-  if (uv >= 3)
-    return "Enjoy the Day —<br>Sun Protection Advised.";
+  if (uv >= 11 || hi >= 42) return "Danger!<br>Stay Indoors Today.";
+  if (uv >= 8  || hi >= 33) return "Please Exercise<br>Caution Today.";
+  if (uv >= 6  || hi >= 27) return "Take Care<br>in the Sun Today.";
+  if (uv >= 3)              return "Enjoy the Day —<br>Sun Protection Advised.";
   return "All Clear.<br>Have a Great Day!";
 }
 
@@ -130,48 +121,39 @@ function getCautionHeadline(uv, hi) {
 // ═══════════════════════════════════════════════════════════════
 const REMINDERS = {
   hydrate: {
-    id:   "reminderHydrate",
-    icon: "🥛",
-    name: "Hydrate",
+    id: "reminderHydrate", icon: "🥛", name: "Hydrate",
     levels: {
-      low:      { desc: "Drink at least 6 glasses of water today.",       active: true  },
-      moderate: { desc: "Drink 6–8 glasses of water; more if outdoors.",  active: true  },
-      high:     { desc: "Drink 8–10 glasses. Avoid sugary or iced drinks.", active: true },
-      extreme:  { desc: "Drink water every 20 min. Dehydration risk is high.", active: true },
+      low:      { desc: "Drink at least 6 glasses of water today.",              active: true  },
+      moderate: { desc: "Drink 6–8 glasses of water; more if outdoors.",         active: true  },
+      high:     { desc: "Drink 8–10 glasses. Avoid sugary or iced drinks.",      active: true  },
+      extreme:  { desc: "Drink water every 20 min. Dehydration risk is high.",   active: true  },
     }
   },
   spf: {
-    id:   "reminderSPF",
-    icon: "🧴",
-    name: "Use Sunscreen",
+    id: "reminderSPF", icon: "🧴", name: "Use Sunscreen",
     levels: {
-      low:      { desc: "SPF 15 optional for extended outdoor time.",      active: false },
-      moderate: { desc: "Apply SPF 30+ before going outside.",             active: true  },
-      high:     { desc: "SPF 50+ essential. Reapply every 2 hours.",       active: true  },
-      extreme:  { desc: "SPF 50+ broad-spectrum. Reapply every 1–2 hrs.", active: true  },
+      low:      { desc: "SPF 15 optional for extended outdoor time.",            active: false },
+      moderate: { desc: "Apply SPF 30+ before going outside.",                  active: true  },
+      high:     { desc: "SPF 50+ essential. Reapply every 2 hours.",            active: true  },
+      extreme:  { desc: "SPF 50+ broad-spectrum. Reapply every 1–2 hrs.",       active: true  },
     }
   },
   sun: {
-    id:   "reminderSun",
-    icon: "🕶️",
-    name: "Limit Peak Sun Exposure",
+    id: "reminderSun", icon: "🕶️", name: "Limit Peak Sun Exposure",
     levels: {
-      low:      { desc: "Sun exposure is generally safe today.",           active: false },
-      moderate: { desc: "Seek shade between 10 am – 2 pm.",               active: true  },
-      high:     { desc: "Avoid direct sun 10 am – 3 pm.",                 active: true  },
-      extreme:  { desc: "Stay indoors 9 am – 4 pm if possible.",          active: true  },
+      low:      { desc: "Sun exposure is generally safe today.",                 active: false },
+      moderate: { desc: "Seek shade between 10 am – 2 pm.",                     active: true  },
+      high:     { desc: "Avoid direct sun 10 am – 3 pm.",                       active: true  },
+      extreme:  { desc: "Stay indoors 9 am – 4 pm if possible.",                active: true  },
     }
   },
-  // Additional reminder that appears only at extreme heat
   heat: {
-    id:   "reminderHeat",
-    icon: "🏠",
-    name: "Stay Cool Indoors",
+    id: "reminderHeat", icon: "🏠", name: "Stay Cool Indoors",
     levels: {
       low:      { desc: null, active: false },
       moderate: { desc: null, active: false },
-      high:     { desc: "Take breaks in air-conditioned spaces.",          active: false },
-      extreme:  { desc: "Avoid all strenuous outdoor activity.",           active: true  },
+      high:     { desc: "Take breaks in air-conditioned spaces.",                active: false },
+      extreme:  { desc: "Avoid all strenuous outdoor activity.",                 active: true  },
     }
   }
 };
@@ -187,14 +169,14 @@ function renderReminders(uv, hi) {
   const level = uvToReminderLevel(uv, hi);
   const container = document.querySelector(".reminders-card");
 
-  // Remove the optional heat reminder row if it exists from a prior update
+  // Remove optional heat reminder row from a prior update
   const existingHeat = document.getElementById("reminderHeat");
   if (existingHeat) existingHeat.remove();
 
-  Object.entries(REMINDERS).forEach(([key, rem]) => {
+  Object.entries(REMINDERS).forEach(([, rem]) => {
     const cfg = rem.levels[level];
 
-    // The heat reminder row may not exist in the HTML — create it if needed
+    // Dynamically create the heat reminder row only when active
     if (rem.id === "reminderHeat") {
       if (!cfg.active) return;
       const row = document.createElement("div");
@@ -212,14 +194,8 @@ function renderReminders(uv, hi) {
 
     const row = document.getElementById(rem.id);
     if (!row) return;
-
-    // Toggle visual active state
     row.classList.toggle("reminder-inactive", !cfg.active);
-
-    // Update description text
-    const descEl = row.querySelector(".reminder-name");
     const bodyEl = row.querySelector(".reminder-desc");
-    if (descEl) descEl.textContent = rem.name;
     if (bodyEl) bodyEl.textContent = cfg.active ? cfg.desc : "Not required today.";
   });
 }
@@ -230,47 +206,33 @@ function renderReminders(uv, hi) {
 // ═══════════════════════════════════════════════════════════════
 function setArrow(el, current, previous) {
   if (previous === null || current === previous) {
-    el.textContent = "→";
-    el.style.color  = "rgba(255,255,255,0.4)";
+    el.textContent = "→"; el.style.color = "rgba(255,255,255,0.4)";
   } else if (current > previous) {
-    el.textContent = "↑";
-    el.style.color  = "#ff3b30";
+    el.textContent = "↑"; el.style.color = "#ff3b30";
   } else {
-    el.textContent = "↓";
-    el.style.color  = "#34c759";
+    el.textContent = "↓"; el.style.color = "#34c759";
   }
 }
 
 function updateRightColumn(uv, hi) {
-  // UV card
   const uvClass = classifyUV(uv);
-  const uvValEl  = document.getElementById("uvValue");
-  const uvLvlEl  = document.getElementById("uvLevel");
-  const uvArrEl  = document.getElementById("uvArrow");
-  const uvUnit   = document.querySelector(".uv-card .data-card-unit");
+  const hiClass = classifyHI(hi);
 
-  if (uvValEl)  uvValEl.textContent  = uv.toFixed(1);
-  if (uvLvlEl)  {
-    uvLvlEl.textContent  = uvClass.level;
-    uvLvlEl.style.color  = uvClass.color;
-  }
-  if (uvUnit)   uvUnit.textContent   = "UV";
-  if (uvArrEl)  setArrow(uvArrEl, uv, prevUV);
+  const uvValEl = document.getElementById("uvValue");
+  const uvLvlEl = document.getElementById("uvLevel");
+  const uvArrEl = document.getElementById("uvArrow");
 
-  // Heat Index card
-  const hiClass  = classifyHI(hi);
-  const hiValEl  = document.getElementById("hiValue");
-  const hiLvlEl  = document.getElementById("hiLevel");
-  const hiArrEl  = document.getElementById("hiArrow");
-  const hiUnit   = document.querySelector(".hi-card .data-card-unit");
+  if (uvValEl) uvValEl.textContent = uv.toFixed(1);
+  if (uvLvlEl) { uvLvlEl.textContent = uvClass.level; uvLvlEl.style.color = uvClass.color; }
+  if (uvArrEl) setArrow(uvArrEl, uv, prevUV);
 
-  if (hiValEl)  hiValEl.textContent  = hi.toFixed(1);
-  if (hiLvlEl)  {
-    hiLvlEl.textContent  = hiClass.level;
-    hiLvlEl.style.color  = hiClass.color;
-  }
-  if (hiUnit)   hiUnit.textContent   = "°C";
-  if (hiArrEl)  setArrow(hiArrEl, hi, prevHI);
+  const hiValEl = document.getElementById("hiValue");
+  const hiLvlEl = document.getElementById("hiLevel");
+  const hiArrEl = document.getElementById("hiArrow");
+
+  if (hiValEl) hiValEl.textContent = hi.toFixed(1);
+  if (hiLvlEl) { hiLvlEl.textContent = hiClass.level; hiLvlEl.style.color = hiClass.color; }
+  if (hiArrEl) setArrow(hiArrEl, hi, prevHI);
 }
 
 
@@ -278,70 +240,72 @@ function updateRightColumn(uv, hi) {
 // 7. LEFT-COLUMN CARDS
 // ═══════════════════════════════════════════════════════════════
 function updateLeftColumn(uv, hi) {
-  // Headline
   const headlineEl = document.getElementById("cautionHeadline");
   if (headlineEl) headlineEl.innerHTML = getCautionHeadline(uv, hi);
 
-  // Date
   const dateEl = document.getElementById("cautionDate");
   if (dateEl) {
     dateEl.textContent = new Date().toLocaleDateString("en-PH", {
-      weekday: "long",
-      year:    "numeric",
-      month:   "long",
-      day:     "numeric"
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
     });
   }
 
-  // Feels like (Heat Index)
   const feelsEl = document.getElementById("cautionFeels");
   if (feelsEl) feelsEl.textContent = `feels like ${hi.toFixed(1)}°C`;
 
-  // Safety reminders
   renderReminders(uv, hi);
 }
 
 
 // ═══════════════════════════════════════════════════════════════
-// 8. MASTER UPDATE  (called whenever Firebase sends new data)
+// 8. MASTER UPDATE  (called by both Firebase listener & mock tick)
 // ═══════════════════════════════════════════════════════════════
 function applyUpdate(uv, tempC, rh) {
   const hi = calcHeatIndex(tempC, rh);
-
   updateLeftColumn(uv, hi);
   updateRightColumn(uv, hi);
-
-  // Save for arrow comparison next cycle
   prevUV = uv;
   prevHI = hi;
-
-  latestUV   = uv;
-  latestTemp = tempC;
-  latestHum  = rh;
 }
 
 
 // ═══════════════════════════════════════════════════════════════
-// 9. FIREBASE REALTIME LISTENER
+// 9A. FIREBASE REALTIME LISTENER  (USE_FIREBASE = true)
 // ═══════════════════════════════════════════════════════════════
-sensorRef.on("value", (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
+function initFirebaseListener() {
+  sensorRef.on("value", (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
 
-  const uv   = parseFloat(data.uv)          || 0;
-  const temp = parseFloat(data.temperature) || 0;
-  const hum  = parseFloat(data.humidity)    || 0;
+    const uv   = parseFloat(data.uv)          || 0;
+    const temp = parseFloat(data.temperature ?? data.temp) || 0;
+    const hum  = parseFloat(data.humidity     ?? data.hum) || 0;
 
-  applyUpdate(uv, temp, hum);
-}, (err) => {
-  console.error("Firebase read error:", err);
+    applyUpdate(uv, temp, hum);
+  }, (err) => {
+    console.error("Firebase read error:", err);
+    const headlineEl = document.getElementById("cautionHeadline");
+    if (headlineEl) headlineEl.innerHTML = "Sensor Offline.<br>Data Unavailable.";
+    const feelsEl = document.getElementById("cautionFeels");
+    if (feelsEl) feelsEl.textContent = "feels like --°C";
+  });
+}
 
-  // Show degraded state in UI
-  const headlineEl = document.getElementById("cautionHeadline");
-  if (headlineEl) headlineEl.innerHTML = "Sensor Offline.<br>Data Unavailable.";
-  const feelsEl = document.getElementById("cautionFeels");
-  if (feelsEl) feelsEl.textContent = "feels like --°C";
-});
+
+// ═══════════════════════════════════════════════════════════════
+// 9B. MOCK DATA POLLING  (USE_FIREBASE = false)
+//     Mirrors the ranges used in dashboard.js
+// ═══════════════════════════════════════════════════════════════
+function startMockPolling() {
+  function tick() {
+    const uv   = +(7 + Math.random() * 3).toFixed(2);
+    const temp = +(30 + Math.random() * 4).toFixed(1);
+    const hum  = +(72 + Math.random() * 10).toFixed(0);
+    applyUpdate(uv, temp, hum);
+  }
+  tick();                        // immediate first render
+  setInterval(tick, 2000);       // then every 2 s, matching dashboard.js
+}
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -351,12 +315,19 @@ function tickDate() {
   const dateEl = document.getElementById("cautionDate");
   if (dateEl) {
     dateEl.textContent = new Date().toLocaleDateString("en-PH", {
-      weekday: "long",
-      year:    "numeric",
-      month:   "long",
-      day:     "numeric"
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
     });
   }
 }
 tickDate();
 setInterval(tickDate, 60_000);
+
+
+// ═══════════════════════════════════════════════════════════════
+// 11. ENTRY POINT
+// ═══════════════════════════════════════════════════════════════
+if (USE_FIREBASE) {
+  initFirebaseListener();
+} else {
+  startMockPolling();
+}

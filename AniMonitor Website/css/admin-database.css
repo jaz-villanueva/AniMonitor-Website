@@ -573,13 +573,13 @@ html, body {
 
 /* ── ADMIN LINK STYLE IN NAVBAR ── */
 .navbar-menu li a.admin-link {
-    border-color: rgba(255,149,0,0.6);
+    border-color: rgba(255, 255, 255, 0.6);
     color: var(--amber);
 }
 
 .navbar-menu li a.admin-link:hover,
 .navbar-menu li a.admin-link.active {
-    background: rgba(255,149,0,0.85);
+    background: rgba(255, 255, 255, 0.85);
     color: #1e293b;
     border-color: var(--amber);
 }
