@@ -11,7 +11,7 @@
 // ─── FLAGS ──────────────────────────────────────────────────────
 // Set USE_FIREBASE to true when your ESP32 is pushing live data.
 // Set to false to use generated mock data during development.
-const USE_FIREBASE = TRUE;
+const USE_FIREBASE = false;
 
 
 // ─── FIREBASE CONFIG ────────────────────────────────────────────
