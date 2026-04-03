@@ -16,8 +16,6 @@
     <link rel="stylesheet" href="css/navbar.css">
 
     <script>
-
-        // Firebase connection (replace later)
         
       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
@@ -77,18 +75,10 @@
 
 <section class="dash">
 
-  <header class="topbar">
-    <div class="logo">Ani<span>Monitor</span></div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-      <div class="clock" id="clk">--:--:--</div>
-    </div>
-  </header>
-
   <section class="hero glass">
-    <div class="hero-label">ESP32 · Node 01 · Manila, PH</div>
-    <div class="hero-title">Real-Time <span class="accent">Sensor</span> Dashboard</div>
-    <div class="hero-sub">UV radiation · Temperature · Humidity — updated every 2s</div>
+    <div class="hero-label">ESP32 based in Manila, PH</div>
+    <div class="hero-title">Real Time <span class="accent">Sensor</span> Dashboard</div>
+    <div class="hero-sub">UV radiation · Temperature · Humidity</div>
     <div class="hero-stats">
       <div class="hstat uv-c">
         <div class="hstat-label">UV Index</div>
@@ -114,14 +104,14 @@
   <section class="grid2">
     <article class="panel glass">
       <div class="panel-header">
-        <div class="panel-title">UV Intensity — 10 min</div>
+        <div class="panel-title">UV Intensity</div>
         <div class="panel-badge badge-uv" id="uv-now">8.4</div>
       </div>
       <div class="chart-wrap"><canvas id="uvChart"></canvas></div>
-    </div>
+    </article>
     <article class="panel glass">
       <div class="panel-header">
-        <div class="panel-title">Temperature — 10 min</div>
+        <div class="panel-title">Temperature</div>
         <div class="panel-badge badge-temp" id="temp-now">32.1°C</div>
       </div>
       <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
@@ -131,18 +121,18 @@
   <section class="grid2" style="margin-bottom:14px;">
     <article class="panel glass">
       <div class="panel-header">
-        <div class="panel-title">Humidity — 10 min</div>
+        <div class="panel-title">Humidity</div>
         <div class="panel-badge badge-hum" id="hum-now">78%</div>
       </div>
       <div class="chart-wrap"><canvas id="humChart"></canvas></div>
-    </div>
+    </article>
     <article class="panel glass">
       <div class="panel-header">
         <div class="panel-title">Temp vs Humidity</div>
         <div class="panel-badge badge-uv">correlation</div>
       </div>
       <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
-    </div>
+    </article>
   </div>
 
   <section class="alert-row">

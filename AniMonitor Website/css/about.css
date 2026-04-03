@@ -8,7 +8,7 @@
     --glass-highlight: rgba(255, 255, 255, 0.26);
     --text-primary:    #ffffff;
     --text-secondary:  rgba(255, 255, 255, 0.55);
-    --accent:          #ff9500;
+    --accent:          #15c01e;
     --card-radius:     18px;
     --card-radius-sm:  14px;
 }
@@ -22,8 +22,8 @@ html, body {
 
 body {
     background:
-        radial-gradient(ellipse at 80% 0%,   rgba(255, 149,   0, 0.22) 0%, transparent 55%),
-        radial-gradient(ellipse at 20% 100%,  rgba( 48, 176, 192, 0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 0%,   rgba(89, 206, 53, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 100%,  rgba(48, 192, 91, 0.18) 0%, transparent 55%),
         linear-gradient(160deg, #0d1117 0%, #161c24 60%, #0f1923 100%);
     background-attachment: fixed;
 }
