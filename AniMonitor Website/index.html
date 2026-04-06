@@ -6,7 +6,7 @@
     <title>AniMonitor Dashboard</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="css/navbar.css">
 
     <script>
+
+        // Firebase connection (replace later)
         
       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
@@ -29,8 +31,8 @@
       measurementId: "G-L4BMFXWWSF"
     };
 
-      // Flag to switch between Firebase and mock data
-      const USE_FIREBASE = false; // Set to true when Firebase is configured
+      
+      const USE_FIREBASE = true;
 
       // Initialize Firebase only when ready
       let database, sensorRef;
@@ -61,9 +63,9 @@
                 <li><a href="dashboard.html" class="active">dashboard</a></li>
                 <li><a href="weather-forecast.html">forecast</a></li>
                 <li><a href="uv-heat.html">heat uv</a></li>
-                <li><a href="map.html">map</a></li>
-                <li><a href="admin-database.html">database</a></li>
-                <li><a href="about.html">about</a></li>
+                <li><a href="">map</a></li>
+                <li><a href="">analysis</a></li>
+                            <li><a href="admin-database.html" class="admin-link">admin</a></li>
             </ul>
         </div>
     </div>
@@ -71,31 +73,46 @@
 </header>
 
 <!-- page content-->
-<main class="page-wrapper">
+<main class="page-wrapper container-fluid">
 
-<section class="dash">
+<div class="row justify-content-center">
+<section class="dash col-12 col-xxl-9">
+
+  <header class="topbar">
+    <div class="logo">Ani<span>Monitor</span></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#dashboardInfoModal">About</button>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <div class="clock" id="clk">--:--:--</div>
+    </div>
+  </header>
+
+  <div class="alert alert-info alert-dismissible fade show py-2 px-3 mb-3" id="dashboardTipAlert" role="alert">
+    <strong>Tip:</strong> Use the About button for sensor context and data source details.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
 
   <section class="hero glass">
-    <div class="hero-label">ESP32 based in Manila, PH</div>
-    <div class="hero-title">Real Time <span class="accent">Sensor</span> Dashboard</div>
-    <div class="hero-sub">UV radiation · Temperature · Humidity</div>
+    <div class="hero-label">ESP32 · Node 01 · Manila, PH</div>
+    <div class="hero-title">Real-Time <span class="accent">Sensor</span> Dashboard</div>
+    <div class="hero-sub">UV radiation · Temperature · Humidity — updated every 2s</div>
     <div class="hero-stats">
       <div class="hstat uv-c">
         <div class="hstat-label">UV Index</div>
         <div class="hstat-val" id="h-uv">8.4<span class="hstat-unit"></span></div>
-        <div class="hstat-sub">Very High</div>
+        <div class="hstat-sub" id="h-uv-sub">Very High</div>
         <div class="hstat-bar"><div class="hstat-fill" id="bar-uv" style="width:84%"></div></div>
       </div>
       <div class="hstat temp-c">
         <div class="hstat-label">Temperature</div>
         <div class="hstat-val" id="h-temp">32.1<span class="hstat-unit">°C</span></div>
-        <div class="hstat-sub">Feels 35°C</div>
+        <div class="hstat-sub" id="h-temp-sub">Feels like 35°C</div>
         <div class="hstat-bar"><div class="hstat-fill" id="bar-temp" style="width:72%"></div></div>
       </div>
       <div class="hstat hum-c">
         <div class="hstat-label">Humidity</div>
         <div class="hstat-val" id="h-hum">78<span class="hstat-unit">%</span></div>
-        <div class="hstat-sub">High</div>
+        <div class="hstat-sub" id="h-hum-sub">High</div>
         <div class="hstat-bar"><div class="hstat-fill" id="bar-hum" style="width:78%"></div></div>
       </div>
     </div>
@@ -104,14 +121,14 @@
   <section class="grid2">
     <article class="panel glass">
       <div class="panel-header">
-        <div class="panel-title">UV Intensity</div>
+        <div class="panel-title">UV Intensity — 10 min</div>
         <div class="panel-badge badge-uv" id="uv-now">8.4</div>
       </div>
       <div class="chart-wrap"><canvas id="uvChart"></canvas></div>
     </article>
     <article class="panel glass">
       <div class="panel-header">
-        <div class="panel-title">Temperature</div>
+        <div class="panel-title">Temperature — 10 min</div>
         <div class="panel-badge badge-temp" id="temp-now">32.1°C</div>
       </div>
       <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
@@ -121,7 +138,7 @@
   <section class="grid2" style="margin-bottom:14px;">
     <article class="panel glass">
       <div class="panel-header">
-        <div class="panel-title">Humidity</div>
+        <div class="panel-title">Humidity — 10 min</div>
         <div class="panel-badge badge-hum" id="hum-now">78%</div>
       </div>
       <div class="chart-wrap"><canvas id="humChart"></canvas></div>
@@ -133,7 +150,7 @@
       </div>
       <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
     </article>
-  </div>
+  </section>
 
   <section class="alert-row">
     <article class="alert-card alert-uv" id="alertUV">
@@ -154,15 +171,34 @@
   </section>
 
   <footer class="sensor-footer glass">
-    <div class="sf-item"><div class="sf-label">DEVICE</div><div class="sf-val" style="font-family:'Montserrat', sans-serif;font-size:11px;">ESP32-WROOM</div></div>
-    <div class="sf-item"><div class="sf-label">SENSOR</div><div class="sf-val" style="font-family:'Montserrat', sans-serif;font-size:11px;">BME280 + GUVA12SD</div></div>
-    <div class="sf-item"><div class="sf-label">POLL RATE</div><div class="sf-val" style="color:var(--green);font-family:'Montserrat', sans-serif;font-size:11px;" id="pollRate">2s</div></div>
+    <div class="sf-item"><div class="sf-label">DEVICE</div><div class="sf-val" style="font-family:'Manrope', sans-serif;font-size:11px;">ESP32-WROOM</div></div>
+    <div class="sf-item"><div class="sf-label">SENSOR</div><div class="sf-val" style="font-family:'Manrope', sans-serif;font-size:11px;">DHT22 + GUVA12SD</div></div>
+    <div class="sf-item"><div class="sf-label">POLL RATE</div><div class="sf-val" style="color:var(--green);font-family:'Manrope', sans-serif;font-size:11px;" id="pollRate">2s</div></div>
     <div class="sf-item"><div class="sf-label">SIGNAL</div><div class="sf-val" id="signalStrength">▂▄▆█</div></div>
-    <div class="sf-item"><div class="sf-label">UPTIME</div><div class="sf-val" id="uptime" style="font-family:'Montserrat', sans-serif;font-size:11px;">00:00:00</div></div>
+    <div class="sf-item"><div class="sf-label">UPTIME</div><div class="sf-val" id="uptime" style="font-family:'Manrope', sans-serif;font-size:11px;">00:00:00</div></div>
   </footer>
 </section>
 
+</div>
+
 </main>
+
+<div class="modal fade" id="dashboardInfoModal" tabindex="-1" aria-labelledby="dashboardInfoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dashboardInfoModalLabel">AniMonitor Dashboard</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Live dashboard for UV, temperature, and humidity trends from Node 01 using DHT22 and GUVA12SD sensors, connected to Firebase Realtime Database. Data refreshes every 2 seconds.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
